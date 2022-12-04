@@ -19,8 +19,43 @@ package main
 
 import (
 	"fmt"
+  "os"
+  "strconv"
+	"time"
+  "net/http"
 )
 
-func main(){
-	fmt.Println("Hello, World!");
+func main() {
+  duration, err := strconv.Atoi(os.Getenv("DURATION_IN_SECONDS"))
+  if err != nil {
+      fmt.Println("Error during duration conversion")
+      os.Exit(1)
+  }
+
+  url := os.Getenv("HEALTH_CHECK_URL")
+  if url == ""{
+      fmt.Println("health check url can't be null or empty")
+      os.Exit(1)
+  }
+
+  for {
+    time.Sleep(time.Duration(duration) * time.Second)
+
+	  res, err := http.Get(url)
+    if err != nil {
+      notify("error making http request");
+      os.Exit(1)
+    }
+
+    if res.StatusCode == 500 {
+      notify("service is down");
+      os.Exit(1)
+    }
+    fmt.Println("service is up");
+  }
+}
+
+
+func notify(message string) {
+  fmt.Println(message);
 }
